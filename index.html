@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chesity's Purgatory</title>
+<style>
+:root{--bg:#09090d;--panel:#111119;--panel2:#171721;--text:#f5f5f7;--muted:#9898a8;--accent:#b56cff;--accent2:#6c63ff;--danger:#ff5577;--border:#292938}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#2a1644 0,#09090d 42%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}
+header{height:72px;border-bottom:1px solid var(--border);background:#0b0b10cc;backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 5%;position:sticky;top:0;z-index:5}
+.logo{font-weight:800;letter-spacing:.4px}.logo span{color:var(--accent)}
+nav button,.btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:10px 15px;border-radius:10px;cursor:pointer;font-weight:650}
+nav button:hover,.btn:hover{border-color:#55556b;background:var(--panel2)}
+.hero{max-width:900px;margin:90px auto 35px;text-align:center;padding:0 20px}.hero h1{font-size:clamp(42px,8vw,76px);margin:0 0 12px;letter-spacing:-3px}.hero h1 span{background:linear-gradient(90deg,#fff,#b56cff);-webkit-background-clip:text;color:transparent}.hero p{color:var(--muted);font-size:17px}
+.search{display:flex;gap:10px;margin:28px auto;max-width:720px}.search input,.field input,.field textarea,.field select{width:100%;background:#0d0d14;border:1px solid var(--border);color:var(--text);padding:15px;border-radius:12px;outline:none}.search input{font-size:17px}.search input:focus,.field input:focus,.field textarea:focus{border-color:var(--accent)}.search button{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:white;padding:0 24px;border-radius:12px;font-weight:800;cursor:pointer}
+.container{max-width:1000px;margin:auto;padding:20px}.stats{color:var(--muted);font-size:14px;margin-bottom:16px}.results{display:grid;gap:12px}.result{background:linear-gradient(145deg,#13131c,#0f0f15);border:1px solid var(--border);padding:20px;border-radius:15px}.result h3{margin:0 0 7px}.result p{color:var(--muted);margin:0 0 13px;line-height:1.5}.result a{color:#c899ff;text-decoration:none;font-weight:700}.tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.tag{font-size:12px;color:#d6baff;background:#27183a;border:1px solid #482b68;padding:5px 8px;border-radius:999px}
+.empty{text-align:center;color:var(--muted);padding:50px 20px;border:1px dashed var(--border);border-radius:15px}
+#editor{display:none}.editor-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:13px;color:var(--muted)}.full{grid-column:1/-1}.field textarea{min-height:100px;resize:vertical}.actions{display:flex;gap:10px;margin-top:18px}.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:white}.admin-list{margin-top:35px;display:grid;gap:10px}.admin-item{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:15px;background:var(--panel);border:1px solid var(--border);border-radius:12px}.admin-item small{color:var(--muted)}.danger{color:#ff8da5!important;border-color:#542637!important}
+footer{text-align:center;color:#555566;padding:55px 20px}
+@media(max-width:650px){.search{flex-direction:column}.search button{height:50px}.editor-grid{grid-template-columns:1fr}.full{grid-column:auto}.hero{margin-top:60px}.admin-item{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Chesity's <span>Purgatory</span></div>
+  <nav><button id="editorBtn">✦ Edit Database</button><button id="homeBtn" style="display:none">← Search</button></nav>
+</header>
+
+<main id="home">
+<section class="hero">
+  <h1>Chesity's <span>Purgatory</span></h1>
+  <p>Search the Purgatory database. Enter a keyword and discover its results.</p>
+  <div class="search">
+    <input id="searchInput" placeholder="Search a keyword..." autocomplete="off">
+    <button onclick="search()">Search</button>
+  </div>
+</section>
+<section class="container">
+  <div class="stats" id="stats"></div>
+  <div class="results" id="results"></div>
+</section>
+</main>
+
+<main id="editor" class="container">
+  <div class="editor-head">
+    <div><h2>Database Editor</h2><div class="stats">Add keywords and the results they should return.</div></div>
+  </div>
+  <div class="editor-grid">
+    <div class="field"><label>Keyword</label><input id="keyword" placeholder="e.g. jujutsu"></div>
+    <div class="field"><label>Result title</label><input id="title" placeholder="e.g. Jujutsu Shenanigans"></div>
+    <div class="field full"><label>Description</label><textarea id="description" placeholder="Describe the result..."></textarea></div>
+    <div class="field"><label>Result link (optional)</label><input id="url" placeholder="https://example.com"></div>
+    <div class="field"><label>Category</label><input id="category" placeholder="Games"></div>
+  </div>
+  <div class="actions"><button class="btn primary" onclick="addEntry()">＋ Add Result</button><button class="btn" onclick="resetDemo()">Reset Demo Data</button></div>
+  <div class="admin-list" id="adminList"></div>
+</main>
+<footer>Chesity's Purgatory • Your searchable database</footer>
+
+<script>
+const defaultData=[
+ {keyword:"jujutsu",title:"Jujutsu Shenanigans",description:"A Roblox fighting game with customizable movesets and abilities.",url:"https://www.roblox.com/",category:"Games"},
+ {keyword:"purgatory",title:"Welcome to Purgatory",description:"The central database of Chesity's Purgatory.",url:"",category:"General"},
+ {keyword:"chesity",title:"Chesity",description:"A keyword entry in the Purgatory database.",url:"",category:"General"}
+];
+let db=JSON.parse(localStorage.getItem("chesityPurgatoryDB")||"null")||defaultData;
+function save(){localStorage.setItem("chesityPurgatoryDB",JSON.stringify(db));}
+function search(){
+ const q=document.getElementById("searchInput").value.trim().toLowerCase();
+ const matches=q?db.filter(x=>x.keyword.toLowerCase().includes(q)||x.title.toLowerCase().includes(q)||x.description.toLowerCase().includes(q)):db;
+ renderResults(matches,q);
+}
+function renderResults(items,q=""){
+ document.getElementById("stats").textContent=`${items.length} result${items.length!==1?"s":""}${q?' for "'+q+'"':""}`;
+ document.getElementById("results").innerHTML=items.length?items.map((x,i)=>`<article class="result">
+ <h3>${esc(x.title)}</h3><p>${esc(x.description)}</p>
+ ${x.url?`<a href="${safeUrl(x.url)}" target="_blank" rel="noopener">Open result ↗</a>`:""}
+ <div class="tags"><span class="tag">${esc(x.keyword)}</span>${x.category?`<span class="tag">${esc(x.category)}</span>`:""}</div>
+ </article>`).join(""):`<div class="empty">No results found.<br><br>Try another keyword or add this keyword in the editor.</div>`;
+}
+function addEntry(){
+ const keyword=document.getElementById("keyword").value.trim(),title=document.getElementById("title").value.trim(),description=document.getElementById("description").value.trim(),url=document.getElementById("url").value.trim(),category=document.getElementById("category").value.trim();
+ if(!keyword||!title){alert("Keyword and result title are required.");return}
+ db.push({keyword,title,description,url,category});save();
+ ["keyword","title","description","url","category"].forEach(id=>document.getElementById(id).value="");
+ renderAdmin();alert("Result added!");
+}
+function removeEntry(i){if(confirm("Delete this result?")){db.splice(i,1);save();renderAdmin();}}
+function renderAdmin(){document.getElementById("adminList").innerHTML=db.length?db.map((x,i)=>`<div class="admin-item"><div><b>${esc(x.title)}</b><br><small>Keyword: ${esc(x.keyword)} ${x.category?"• "+esc(x.category):""}</small></div><button class="btn danger" onclick="removeEntry(${i})">Delete</button></div>`).join(""):`<div class="empty">No entries yet.</div>`}
+function resetDemo(){if(confirm("Reset the database to the demo entries?")){db=defaultData.map(x=>({...x}));save();renderAdmin();}}
+function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function safeUrl(u){try{let x=new URL(u);return ["http:","https:"].includes(x.protocol)?x.href:"#"}catch{return "#"}}
+document.getElementById("editorBtn").onclick=()=>{home.style.display="none";editor.style.display="block";editorBtn.style.display="none";homeBtn.style.display="inline-block";renderAdmin()};
+document.getElementById("homeBtn").onclick=()=>{editor.style.display="none";home.style.display="block";editorBtn.style.display="inline-block";homeBtn.style.display="none";search()};
+document.getElementById("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")search()});
+renderResults(db);
+</script>
+</body>
+</html>
